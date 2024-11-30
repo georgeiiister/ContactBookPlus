@@ -4,7 +4,7 @@ import pathlib
 import json
 
 
-def get_tuning_value(tuning_name: str) -> (str, int):
+def get_tuning_value(tuning_name: str):
     """function for getting tuning parameters for application"""
     tuning_dict: dict = dict(sep_in_dbase=';',
                              welcome_text='Welcome to you contact book!',
@@ -169,9 +169,6 @@ class Contact(object):
     def __repr__(self):
         return (f'Contact(contact_name={self.contact_name}, phone_number={self.phone_number}, '
                 f'date_time_creation_contact={self.date_time_creation_contact})')
-
-    def __del__(self):
-        Contact.__count_objects -= 1
 
     def __eq__(self, other):
         return self.phone_number == other.phone_number
@@ -352,7 +349,7 @@ def decorator_args_kwargs(func):
 
 @decorator_args_kwargs
 def find_contact_by_phone(dict_contacts: dict,
-                          phone_number: str) -> None | Contact:
+                          phone_number: str):
     return dict_contacts.get(phone_number)
 
 
@@ -424,16 +421,18 @@ def print_contacts(dict_contacts: dict) -> None:
         if cnt_rows % mark_print != 0:
             input('Output is finish. Press any key to continue...')
     else:
-        print('Contact book is empty!')
+        print(f'{"="*22}\n'
+              f'Contact book is empty!\n'
+              f'{"="*22}\n')
 
 
-def create_file_base(path_to_file_dbase: pathlib.Path) -> bool | None:
+def create_file_base(path_to_file_dbase: pathlib.Path):
     with open(path_to_file_dbase, 'w'):
         pass
     return True
 
 
-def create_file_log(path_to_file_log: pathlib.Path) -> bool | None:
+def create_file_log(path_to_file_log: pathlib.Path):
     with open(path_to_file_log, 'w'):
         pass
     return True
@@ -624,18 +623,17 @@ def main():
                         if search_type not in range(1, 3):
                             raise UnknownAction
 
-                        match search_type:
-                            case 1:
+                        if search_type == 1:
                                 contact = (find_contact_by_phone(dict_contacts=contacts,
                                                                  phone_number=input('Enter phone for search>> ')),)
-                            case 2:
+                        elif search_type == 1:
                                 if not names:
                                     names = create_cash_names(dict_contacts=contacts)
 
                                 contact = find_contact_by_name_(names_dict=names,
                                                                 dict_contacts=contacts,
                                                                 contact_name=input('Enter name for search>> '))
-                            case _:
+                        else:
                                 contact = None
 
                         if contact is None:
