@@ -83,7 +83,7 @@ class ContactExistInFileDBase(ExceptionContactBook):
     pass
 
 
-class Contact(object):
+class Contact:
     __count_objects = 0
     __mask_date_time_creation = '%d.%m.%Y %H:%M:%S'
 
@@ -102,7 +102,8 @@ class Contact(object):
     @classmethod
     def validate_contact_name(cls,
                               contact_name: str,
-                              raise_error=True) -> bool:
+                              raise_error=True
+                              ) -> bool:
         """This function for validate contact name"""
         try:
 
@@ -121,7 +122,8 @@ class Contact(object):
     @classmethod
     def validate_phone_number(cls,
                               phone_number: str,
-                              raise_error=True) -> bool:
+                              raise_error: bool=True
+                              ) -> bool:
         try:
 
             if not phone_number:
@@ -144,13 +146,14 @@ class Contact(object):
     __slots__ = ('__phone_number',
                  '__contact_name',
                  '__date_time_creation_contact',
-                 '__count',)
+                 '__count',
+                 )
 
     def __init__(self,
                  phone_number: str,
                  contact_name: str,
                  date_time_creation_contact=datetime.datetime.now(),
-                 validate=True):
+                 validate: bool=True):
 
         if validate:
             Contact.validate_contact_name(contact_name=contact_name)
@@ -233,11 +236,12 @@ class ContactMr(Contact):
                  phone_number: str,
                  contact_name: str,
                  date_time_creation_contact: datetime.datetime,
-                 validate):
-        super().__init__(phone_number=phone_number,
-                         contact_name=contact_name,
-                         date_time_creation_contact=date_time_creation_contact,
-                         validate=validate
+                 validate
+                 ):
+        super().__init__(phone_number = phone_number,
+                         contact_name = contact_name,
+                         date_time_creation_contact = date_time_creation_contact,
+                         validate = validate
                          )
 
 
@@ -250,17 +254,18 @@ class ContactMs(Contact):
                  phone_number: str,
                  contact_name: str,
                  date_time_creation_contact: datetime.datetime,
-                 validate):
-        super().__init__(phone_number=phone_number,
-                         contact_name=contact_name,
-                         date_time_creation_contact=date_time_creation_contact,
-                         validate=validate
+                 validate
+                 ):
+        super().__init__(phone_number = phone_number,
+                         contact_name = contact_name,
+                         date_time_creation_contact = date_time_creation_contact,
+                         validate = validate
                          )
 
 
 def get_eq(val1: str, val2: str):
     """case-insensitive search"""
-    result = True if val1.lower() == val2.lower() else False
+    result = val1.lower() == val2.lower()
 
     if not result:
         eq_sym = {'ё': 'е',
@@ -349,7 +354,8 @@ def decorator_args_kwargs(func):
 
 @decorator_args_kwargs
 def find_contact_by_phone(dict_contacts: dict,
-                          phone_number: str):
+                          phone_number: str
+                          ):
     return dict_contacts.get(phone_number)
 
 
@@ -365,7 +371,8 @@ def find_contact_by_name(dict_contacts: dict,
 @decorator_time_lost
 def find_contact_by_name_(names_dict: dict,
                           dict_contacts: dict,
-                          contact_name: str) -> tuple:
+                          contact_name: str
+                          ) -> tuple:
     contacts = names_dict.get(contact_name.upper())
 
     if contacts is None:
@@ -390,13 +397,16 @@ def edit_contact(contact: Contact) -> Contact:
     contact_name = input(f'Please, input new contact name for "{contact.contact_name}">> ')
     phone_number = contact.phone_number
     new_contact = Contact(phone_number=phone_number,
-                          contact_name=contact_name)
+                          contact_name=contact_name
+                          )
 
     del contact
     return new_contact
 
 
-def get_mark_print(len_obj: int, num_of_lines: int = get_tuning_value('num_of_lines')) -> int:
+def get_mark_print(len_obj: int,
+                   num_of_lines: int = get_tuning_value('num_of_lines')
+                   ) -> int:
     if len_obj <= num_of_lines:
         mark_print: int = get_tuning_value('mark_print')
     else:
