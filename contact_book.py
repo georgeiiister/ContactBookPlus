@@ -33,11 +33,24 @@ class UnknownAction(ExceptionContactBook):
 
 
 class NoVerifiedContactName(ExceptionContactBook):
-    pass
+    __message = {
+                    'ru':'',
+                    'en': 'Contact name failed verification',
+                }
+    @classmethod
+    def message(cls,lang='en'):
+        return NoVerifiedContactName.__message.get(lang.lower())
 
 
 class NoneContactName(NoVerifiedContactName):
-    pass
+    __message = {
+        'ru': '',
+        'en': 'Сontact name is empty',
+    }
+
+    @classmethod
+    def message(cls, lang='en'):
+        return NoneContactName.__message.get(lang.lower())
 
 
 class NoVerifiedPhoneNumber(ExceptionContactBook):
@@ -102,19 +115,19 @@ class Contact:
     @classmethod
     def validate_contact_name(cls,
                               contact_name: str,
-                              raise_error=True
+                              raise_error = True
                               ) -> bool:
         """This function for validate contact name"""
         try:
 
             if not contact_name:
-                raise NoVerifiedContactName
+                raise NoneContactName
             else:
                 return True
 
-        except NoVerifiedContactName:
+        except NoneContactName:
             if raise_error:
-                print('Sorry, you contact name not valid')
+                print(NoneContactName.message())
                 raise
             else:
                 return False
@@ -616,7 +629,7 @@ def main():
                         else:
                             raise ContactExistInFileDBase
 
-                    except (NoVerifiedContactName, NoVerifiedPhoneNumber, ExitInMainMenu):
+                    except (NoneContactName, NoVerifiedPhoneNumber, ExitInMainMenu):
                         if input('Add another? ("Y" - Press any key / "N" - return main menu)>> ').upper() == 'N':
                             break
                     except ContactExistInFileDBase:
