@@ -44,9 +44,9 @@ class NoVerifiedContactName(ExceptionContactBook):
 
 class NoneContactName(NoVerifiedContactName):
     __message = {
-        'ru': '',
-        'en': 'Сontact name is empty',
-    }
+                    'ru': '',
+                    'en': 'Сontact name is empty',
+                }
 
     @classmethod
     def message(cls, lang='en'):
