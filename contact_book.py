@@ -2,17 +2,21 @@ import datetime
 import os
 import pathlib
 import json
+import pickle
 
 
 def get_tuning_value(tuning_name: str):
     """function for getting tuning parameters for application"""
-    tuning_dict: dict = dict(sep_in_dbase=';',
-                             welcome_text='Welcome to you contact book!',
-                             num_of_lines=10,
-                             mark_print=100,
-                             path_to_dbase=os.path.expanduser('~'),
-                             path_to_dir='contact_book',
-                             name_log='contact-book.log')
+    tuning_dict: dict = dict(
+                               sep_in_dbase=';',
+                               welcome_text='Welcome to you contact book!',
+                               num_of_lines=10,
+                               mark_print=100,
+                               path_to_dbase=os.path.expanduser('~'),
+                               path_to_dir='contact_book',
+                               name_log='contact-book.log',
+                               file_name_of_backup='contact_book_backup'
+                             )
 
     if tuning_name == 'path_to_dbase':
         path_to_dir = f'{tuning_dict[tuning_name]}{os.sep}{tuning_dict["path_to_dir"]}'
@@ -52,6 +56,18 @@ class NoneContactName(NoVerifiedContactName):
     def message(cls, lang='en'):
         return NoneContactName.__message.get(lang.lower())
 
+class BackupError(ExceptionContactBook):
+    pass
+
+class UnknownFormatOfBackupError(BackupError):
+    __message = {
+        'ru': '',
+        'en': 'Unknown format of backup',
+    }
+
+    @classmethod
+    def message(cls, lang='en'):
+        return UnknownFormatOfBackupError.__message.get(lang.lower())
 
 class NoVerifiedPhoneNumber(ExceptionContactBook):
     pass
@@ -541,16 +557,39 @@ def full_upload_dbase(dbase_dict: dict,
         print(f'total upload {cnt_rows} rows...')
 
 
-def full_backup_dbase(dbase_dict: dict,
-                      path_to_file_dbase=pathlib.Path(get_tuning_value('path_to_dbase')
-                                                      + os.sep + 'contact-book.backup'),
-                      mark_print=None) -> pathlib.Path:
+def full_backup_dbase(
+                        dbase_dict: dict,
+                        format_of_backup = 'json',
+                        path_to_file_dbase=None,
+                        mark_print=None
+                      ) -> pathlib.Path:
     try:
+        if not path_to_file_dbase:
+            file_name_of_backup = get_tuning_value('file_name_of_backup')
+            extension_file = {
+                              'json':'json',
+                              'pickle':'pickle'
+                             }
+
+            if format_of_backup.lower() in extension_file.keys():
+                file_name_of_backup = (
+                                       f'{file_name_of_backup}.'
+                                       f'{extension_file.get(format_of_backup.lower())}'
+                                       )
+            else:
+                 raise UnknownFormatOfBackupError
+
+            path_to_file_dbase = pathlib.Path(
+                                               f'{get_tuning_value("path_to_dbase")}'
+                                               f'{os.sep}'
+                                               f'{file_name_of_backup}'
+                                              )
         if not pathlib.Path(path_to_file_dbase).exists():
             raise FileBaseNotFound
     except FileBaseNotFound:
-        if not create_file_base(path_to_file_dbase=path_to_file_dbase):
-            raise FileBaseNotCreated
+        if format_of_backup.lower() == 'json':
+            if not create_file_base(path_to_file_dbase = path_to_file_dbase):
+                raise FileBaseNotCreated
 
     dict2json = {}
 
@@ -568,8 +607,16 @@ def full_backup_dbase(dbase_dict: dict,
     if cnt_rows > 0:
         print(f'total prepared {cnt_rows} rows...')
 
-    with open(path_to_file_dbase, 'w') as fb:
-        json.dump(dict2json, fb, indent=4)
+    mode_file = 'w'
+    if format_of_backup.lower() == 'pickle':
+        mode_file +='b+'
+    with open(path_to_file_dbase, mode_file) as file_backup:
+
+        if format_of_backup.lower() == 'json':
+            json.dump(dict2json, file_backup, indent=4)
+
+        elif format_of_backup.lower() == 'pickle':
+            pickle.dump(dict2json, file_backup)
 
     return path_to_file_dbase
 
@@ -583,9 +630,10 @@ def main():
                  '3. Show all contacts',
                  '4. Remove contact',
                  '5. Edit contact',
-                 '6. Backup contact book',
+                 '6. Backup contact book (json)',
                  '7. Save contact book to disk',
-                 '8. Exit',)
+                 '8. Exit',
+                 '9. Backup contact book (pickle)')
 
     menu_text = '\n'.join(menu_text)
 
@@ -604,7 +652,7 @@ def main():
 
         try:
             action = int(input('Select action and press the key Enter>> '))
-            if action not in (range(1, 9)):
+            if action not in (range(1, len(menu_text))):
                 raise UnknownAction
 
             if action == 8:
@@ -717,8 +765,15 @@ def main():
                                  '("Y" - Press any key / "N" - return main menu)>> ').upper() == 'N':
                             break
 
-                if action == 6:
-                    path_to_file = full_backup_dbase(dbase_dict=contacts)
+                if action in (6, 9):
+                    format_of_backup = {
+                                          6:'json',
+                                          9:'pickle'
+                                        }
+                    path_to_file = full_backup_dbase(
+                                                      dbase_dict=contacts,
+                                                      format_of_backup=format_of_backup.get(action)
+                                                     )
                     input(f'Backup done... create file: {path_to_file}')
                     break
 
